@@ -1,1 +1,1 @@
-export { useToast, toast } from "@/app/api/hooks/use_toast"
+export { useToast, toast } from "./use-toast-impl"
