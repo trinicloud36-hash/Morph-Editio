@@ -1,0 +1,60 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check dependencies for vulnerabilities
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Check code formatting
+        run: npx prettier --check src/ websockets/
+        continue-on-error: true
+
+      - name: Lint with ESLint
+        run: npm run lint || true
+
+  size-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Check bundle size
+        run: |
+          SIZE=$(du -sh .next/standalone | cut -f1)
+          echo "📦 Build size: $SIZE"
+          echo "Bundle size: $SIZE" >> $GITHUB_STEP_SUMMARY
