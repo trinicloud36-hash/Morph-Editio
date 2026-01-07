@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vectorized Math Genius | MORPH EDITION</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --display-bg: #000000;
+            --border: #334155;
+            --text-main: #f1f5f9;
+            --text-dim: #cbd5e1;
+            --cyan: #22d3ee;
+            --purple: #c084fc;
+            --green: #4ade80;
+            --red: #f87171;
+            --orange: #fb923c;
+            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: 'Fira Code', 'Courier New', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER --- */
+        header {
+            height: 60px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .brand { 
+            font-size: 0.95rem; 
+            font-weight: 800; 
+            letter-spacing: 1px; 
+            color: var(--cyan); 
+            display: flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+            text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+            user-select: none;
+        }
+        .brand span { color: var(--purple); font-weight: 600; font-size: 0.8rem; }
+        
+        .header-controls { display: flex; gap: 0.8rem; }
+
+        .btn-header {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-header:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(34, 211, 238, 0.1); }
+        .btn-header:active { transform: scale(0.95); }
+
+        .status { 
+            font-size: 0.8rem; 
+            color: var(--green); 
+            font-family: var(--font-mono); 
+            font-weight: bold;
+            background: rgba(74, 222, 128, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid var(--green);
+            text-transform: uppercase;
+        }
+
+        /* --- MAIN LAYOUT --- */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- LEFT: CALCULATOR --- */
+        .calc-panel {
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .display-area {
+            background: var(--display-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: flex-end;
+            min-height: 110px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        .save-indicator {
+            position: absolute; top: 8px; left: 8px;
+            font-size: 0.7rem; color: var(--purple);
+            opacity: 0; transition: opacity 0.3s;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .save-indicator.visible { opacity: 1; }
+
+        .display-input { 
+            font-family: var(--font-mono); 
+            font-size: 1.1rem; 
+            color: var(--text-dim); 
+            word-break: break-all; 
+            text-align: right; 
+            min-height: 1.2rem;
+        }
+        
+        .display-result { 
+            font-family: var(--font-mono); 
+            font-size: 2rem; 
+            color: var(--cyan); 
+            font-weight: 700; 
+            margin-top: 0.2rem; 
+            text-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
+        }
+
+        /* Variable Inputs Section */
+        .vars-section {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .var-group { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+        }
+        .var-label-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .var-label { 
+            font-size: 0.7rem; 
+            color: var(--text-dim); 
+            text-transform: uppercase; 
+            font-weight: 700; 
+        }
+        .var-val-preview { font-size: 0.7rem; color: var(--cyan); font-family: var(--font-mono); }
+
+        /* Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]:focus { outline: none; }
+        
+        /* Slider Track */
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #334155;
+            border-radius: 3px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        /* Slider Thumb */
+        input[type=range]::-webkit-slider-thumb {
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: var(--cyan);
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -6px; /* vertical center */
+            box-shadow: 0 0 10px var(--cyan);
+            transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        /* Number Input */
+        .var-input {
+            background: var(--display-bg); 
+            border: 1px solid var(--border); 
+            color: var(--cyan); 
+            padding: 4px 6px; 
+            font-family: var(--font-mono); 
+            border-radius: 4px; 
+            font-size: 0.9rem; 
+            width: 100%; 
+            outline: none; 
+            font-weight: bold;
+            text-align: right;
+            margin-top: 4px;
+        }
+        .var-input:focus { border-color: var(--cyan); box-shadow: 0 0 5px rgba(34, 211, 238, 0.3); }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.6rem;
+            flex-grow: 1;
+        }
+
+        .key {
+            background: #334155; 
+            border: 1px solid #475569; 
+            color: var(--text-main); 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            transition: all 0.1s ease; 
+            font-weight: 600;
+            padding: 10px 0; 
+            box-shadow: 0 3px 0 #1e293b;
+        }
+        
+        .key:active, .key.pressed { transform: translateY(3px); box-shadow: none; background: var(--bg-dark); border-color: var(--text-dim); }
+        .key:hover { border-color: var(--text-dim); background: #475569; }
+
+        .k-num { color: #fff; font-size: 1.2rem; }
+        .k-op { color: var(--orange); font-size: 1.3rem; background: #1e293b; box-shadow: 0 3px 0 #0f172a; }
+        .k-func { color: var(--cyan); font-size: 0.8rem; font-weight: 800; }
+        .k-nn { color: var(--purple); font-size: 0.75rem; font-weight: 800; border-color: var(--purple); }
+        
+        .k-equal { 
+            grid-column: span 2; 
+            background: var(--green); 
+            color: #000; 
+            font-weight: 900; 
+            font-size: 1.3rem; 
+            box-shadow: 0 3px 0 #166534; 
+            flex-direction: column; 
+            line-height: 1;
+        }
+        .k-equal span { font-size: 0.7rem; font-weight: 600; margin-bottom: 2px; opacity: 0.8; }
+        .k-clear { background: rgba(248, 113, 113, 0.2); color: var(--red); border-color: var(--red); box-shadow: 0 3px 0 rgba(127, 29, 29, 0.5); }
+
+        /* --- RIGHT: VISUALIZER & METRICS --- */
+        .viz-panel {
+            display: grid;
+            grid-template-rows: 1fr auto;
+            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            position: relative;
+            border-left: 1px solid var(--border);
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        canvas { display: block; width: 100%; height: 100%; }
+
+        .hud-overlay {
+            position: absolute;
+            top: 1rem; left: 1rem;
+            background: rgba(15, 23, 42, 0.85);
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+        }
+        
+        .hud-row { 
+            margin-bottom: 0.5rem; 
+            font-family: var(--font-mono); 
+            font-size: 0.75rem; 
+            color: var(--text-dim); 
+            display: flex; 
+            gap: 1rem; 
+            align-items: center; 
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 2px;
+        }
+        .hud-row:last-child { border-bottom: none; margin-bottom: 0; }
+        
+        .hud-val { color: var(--cyan); font-weight: 800; text-shadow: 0 0 5px rgba(34,211,238,0.4); }
+        .hud-label { width: 80px; font-weight: 600; }
+
+        .btn-export {
+            position: absolute; top: 1rem; right: 1rem;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: bold;
+            backdrop-filter: blur(4px);
+            display: flex; align-items: center; gap: 6px;
+            transition: all 0.2s;
+        }
+        .btn-export:hover { color: var(--cyan); border-color: var(--cyan); background: rgba(0,0,0,0.8); }
+
+        .metrics-bar {
+            height: 80px;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 1rem;
+        }
+
+        .metric-item { text-align: center; }
+        .metric-title { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 700; }
+        .metric-value { font-family: var(--font-mono); font-size: 1.2rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        
+        .coh-val { color: var(--cyan); }
+        .ali-val { color: var(--purple); }
+        .comp-val { color: var(--orange); }
+
+        /* --- LIBRARY SIDEBAR --- */
+        .library-sidebar {
+            position: fixed; top: 60px; right: -320px;
+            width: 320px; height: calc(100vh - 60px);
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(12px);
+            border-left: 1px solid var(--border);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 90;
+            display: flex; flex-direction: column;
+        }
+        
+        .library-sidebar.open { right: 0; }
+        
+        .lib-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.2);
+        }
+        .lib-title { font-size: 0.85rem; font-weight: 800; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase; }
+        .btn-close { background: none; border: none; color: var(--text-dim); font-size: 1.2rem; cursor: pointer; }
+        
+        .lib-content {
+            flex: 1; overflow-y: auto; padding: 1rem;
+        }
+
+        .saved-item {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .saved-item:hover { border-color: var(--purple); background: rgba(192, 132, 252, 0.05); transform: translateX(-2px); }
+        
+        .saved-eq { font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .saved-meta { font-size: 0.7rem; color: var(--text-dim); display: flex; justify-content: space-between; }
+        
+        .btn-delete-item {
+            position: absolute; top: 8px; right: 8px;
+            color: var(--red); background: none; border: none; cursor: pointer;
+            opacity: 0; transition: opacity 0.2s;
+            font-size: 0.9rem;
+        }
+        .saved-item:hover .btn-delete-item { opacity: 1; }
+
+        .empty-state {
+            text-align: center; color: var(--text-dim); font-size: 0.8rem; margin-top: 2rem; opacity: 0.5;
+        }
+
+        /* --- TOAST --- */
+        .toast-container {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            z-index: 200; display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+        }
+        .toast {
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text-main);
+            border: 1px solid var(--cyan);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            animation: slideUpFade 0.3s ease-out;
+            display: flex; align-items: center; gap: 8px;
+        }
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 850px) {
+            body { overflow: auto; height: auto; }
+            main { grid-template-columns: 1fr; grid-template-rows: auto 400px; height: auto; }
+            header { position: sticky; top: 0; z-index: 100; }
+            .calc-panel { border-right: none; border-bottom: 1px solid var(--border); }
+            .viz-panel { border-left: none; border-top: 1px solid var(--border); }
+            .library-sidebar { width: 100%; right: -100%; height: 60vh; top: auto; bottom: 0; }
+            .library-sidebar.open { right: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand">
+        VECTOR CORE <span>MORPH</span>
+    </div>
+    
+    <div class="header-controls">
+        <button class="btn-header" id="btn-save-current">
+            <span>⚡ SAVE</span>
+        </button>
+        <button class="btn-header" id="btn-open-library">
+            <span>💾 LIBRARY</span>
+        </button>
+    </div>
+    
+    <div class="status" id="sys-status">READY</div>
+</header>
+
+<main>
+    <!-- LEFT: CALCULATOR ENGINE -->
+    <div class="calc-panel">
+        <div class="display-area">
+            <div class="save-indicator" id="save-indicator">
+                <span>✓ SAVED</span>
+            </div>
+            <div class="display-input" id="in-display">0</div>
+            <div class="display-result" id="out-display">0</div>
+        </div>
+        
+        <!-- CONTEXT VARIABLES INPUT WITH SLIDERS -->
+        <div class="vars-section">
+            <div class="var-group">
+                <div class="var-label-row">
+                    <label class="var-label" for="var-x">Var X</label>
+                    <span class="var-val-preview" id="preview-x">1.5</span>
+                </div>
+                <input type="range" id="range-x" min="-10" max="10" step="0.1" value="1.5">
+                <input type="number" id="var-x" class="var-input" value="1.5" step="0.1">
+            </div>
+            <div class="var-group">
+                <div class="var-label-row">
+                    <label class="var-label" for="var-y">Var Y</label>
+                    <span class="var-val-preview" id="preview-y">0.5</span>
+                </div>
+                <input type="range" id="range-y" min="-10" max="10" step="0.1" value="0.5">
+                <input type="number" id="var-y" class="var-input" value="0.5" step="0.1">
+            </div>
+        </div>
+
+        <div class="keypad">
+            <!-- Row 1 -->
+            <button class="key k-nn" data-key="σ(x)">σ(x)</button>
+            <button class="key k-nn" data-key="ReLU">ReLU</button>
+            <button class="key k-func" data-key="tanh(">tanh</button>
+            <button class="key k-clear" data-key="AC">AC</button>
+
+            <!-- Row 2 -->
+            <button class="key k-func" data-key="sin(">sin</button>
+            <button class="key k-func" data-key="cos(">cos</button>
+            <button class="key k-func" data-key="log(">ln</button>
+            <button class="key k-func" data-key="sqrt(">√</button>
+
+            <!-- Row 3 -->
+            <button class="key k-func" data-key="x">x</button>
+            <button class="key k-func" data-key="y">y</button>
+            <button class="key k-func" data-key="^">^</button>
+            <button class="key k-func" data-key="(">(</button>
+
+            <!-- Row 4 -->
+            <button class="key k-func" data-key=")">)</button>
+            <button class="key k-func" data-key="PI">π</button>
+            <button class="key k-func" data-key="Math.exp(">e^</button>
+            <button class="key k-op" data-key="/">÷</button>
+
+            <!-- Row 5 -->
+            <button class="key k-num" data-key="7">7</button>
+            <button class="key k-num" data-key="8">8</button>
+            <button class="key k-num" data-key="9">9</button>
+            <button class="key k-op" data-key="*">×</button>
+
+            <!-- Row 6 -->
+            <button class="key k-num" data-key="4">4</button>
+            <button class="key k-num" data-key="5">5</button>
+            <button class="key k-num" data-key="6">6</button>
+            <button class="key k-op" data-key="-">-</button>
+
+            <!-- Row 7 -->
+            <button class="key k-num" data-key="1">1</button>
+            <button class="key k-num" data-key="2">2</button>
+            <button class="key k-num" data-key="3">3</button>
+            <button class="key k-op" data-key="+">+</button>
+
+            <!-- Row 8 -->
+            <button class="key k-num" data-key="0">0</button>
+            <button class="key k-num" data-key=".">.</button>
+            <button class="key k-equal" data-key="=">
+                <span>SOLVE</span>=
+            </button>
+        </div>
+    </div>
+
+    <!-- RIGHT: VISUALIZER -->
+    <div class="viz-panel">
+        <div class="canvas-container" id="viz-container">
+            <canvas id="spaceCanvas"></canvas>
+            
+            <button class="btn-export" id="btn-export">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                EXPORT VISUAL
+            </button>
+
+            <div class="hud-overlay">
+                <div class="hud-row"><span class="hud-label">AXIS 1:</span> <span id="axis-1">POLY</span></div>
+                <div class="hud-row"><span class="hud-label">AXIS 2:</span> <span id="axis-2">TRIG</span></div>
+                <div class="hud-row"><span class="hud-label">AXIS 3:</span> <span id="axis-3">EXP</span></div>
+                <div class="hud-row"><span class="hud-label">AXIS 4:</span> <span id="axis-4">NEURAL</span></div>
+                <div class="hud-row"><span class="hud-label">AXIS 5:</span> <span id="axis-5">DEPTH</span></div>
+                <div class="hud-row"><span class="hud-label">AXIS 6:</span> <span id="axis-6">VARS</span></div>
+            </div>
+        </div>
+
+        <div class="metrics-bar">
+            <div class="metric-item">
+                <div class="metric-title">Coherence</div>
+                <div class="metric-value coh-val" id="val-coh">0.000</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-title">Aliveness</div>
+                <div class="metric-value ali-val" id="val-ali">0.000</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-title">Complexity</div>
+                <div class="metric-value comp-val" id="val-com">0.000</div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- LIBRARY SIDEBAR -->
+<aside class="library-sidebar" id="library-sidebar">
+    <div class="lib-header">
+        <span class="lib-title">Memory Core</span>
+        <button class="btn-close" id="btn-close-lib">×</button>
+    </div>
+    <div class="lib-content" id="lib-list">
+        <div class="empty-state">NO SAVED DATA</div>
+    </div>
+</aside>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+/* --- HELPERS --- */
+const $ = (s) => document.querySelector(s);
+const showToast = (msg) => {
+    const container = $('#toast-container');
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = `<span>●</span> ${msg}`;
+    container.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(10px)'; setTimeout(() => el.remove(), 300); }, 2500);
+};
+
+/* --- VISUALIZER --- */
+const PHI = 1.618033988749894848204586834365638117720309179805762;
+
+class SpaceTimeVisualizer {
+    constructor() {
+        this.canvas = document.getElementById('spaceCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.container = document.getElementById('viz-container');
+        this.metrics = new Array(6).fill(0);
+        this.rotation = 0;
+        this.particles = [];
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        this.initParticles();
+        this.animate();
+    }
+
+    resize() {
+        this.width = this.container.clientWidth;
+        this.height = this.container.clientHeight;
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+        this.cx = this.width / 2;
+        this.cy = this.height / 2;
+        this.radius = Math.min(this.width, this.height) * 0.25;
+    }
+
+    initParticles() {
+        for(let i=0; i<40; i++) this.particles.push({ x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, z: Math.random()*2, speed: 0.2+Math.random()*0.5 });
+    }
+
+    updateMetrics(inputStr) {
+        let counts = [0,0,0,0,0,0]; 
+        counts[0] = Math.min(1, (inputStr.match(/\^/g)||[]).length*0.5);
+        counts[1] = Math.min(1, (inputStr.match(/(sin|cos|tan|PI)/gi)||[]).length*0.4);
+        counts[2] = Math.min(1, (inputStr.match(/(log|exp|sqrt)/gi)||[]).length*0.4);
+        counts[3] = Math.min(1, (inputStr.match(/(sig|relu|tanh)/gi)||[]).length*0.6);
+        
+        let depth=0, maxD=0;
+        for(let char of inputStr) { if(char==='(') depth++; if(char===')') depth--; if(depth>maxD) maxD=depth; }
+        counts[4] = Math.min(1, maxD*0.25);
+        counts[5] = Math.min(1, (inputStr.match(/[xy]/g)||[]).length*0.5);
+
+        this.targetMetrics = counts;
+        for(let i=0; i<6; i++) {
+            const el = document.getElementById(`axis-${i+1}`);
+            const val = counts[i];
+            el.style.color = val > 0.6 ? "#c084fc" : val > 0.2 ? "#22d3ee" : "#cbd5e1"; 
+        }
+    }
+
+    animate() {
+        this.ctx.fillStyle = 'rgba(2, 6, 23, 0.25)';
+        this.ctx.fillRect(0, 0, this.width, this.height);
+
+        if(this.targetMetrics) for(let i=0; i<6; i++) this.metrics[i] += (this.targetMetrics[i] - this.metrics[i]) * 0.15; // Faster interp for sliders
+
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        this.particles.forEach(p => {
+            p.z -= p.speed*0.1; if(p.z<=0) p.z=2;
+            const sx = (p.x-this.cx)*(1/p.z)+this.cx, sy = (p.y-this.cy)*(1/p.z)+this.cy;
+            this.ctx.beginPath(); this.ctx.arc(sx, sy, 1.5*(1/p.z), 0, Math.PI*2); this.ctx.fill();
+        });
+
+        this.rotation += 0.002;
+        this.ctx.save(); this.ctx.translate(this.cx, this.cy); this.ctx.rotate(this.rotation);
+
+        this.ctx.beginPath(); this.ctx.strokeStyle = 'rgba(34, 211, 238, 0.15)'; this.ctx.lineWidth = 1;
+        const points = [];
+        for(let i=0; i<6; i++) {
+            const angle = (i * Math.PI / 3), dist = this.radius * (0.3 + this.metrics[i] * 1.2);
+            const px = Math.cos(angle)*dist, py = Math.sin(angle)*dist;
+            points.push({x:px, y:py});
+            this.ctx.moveTo(0,0); this.ctx.lineTo(px, py);
+        }
+        this.ctx.stroke();
+
+        this.ctx.beginPath(); this.ctx.strokeStyle = `rgba(192, 132, 252, ${0.4 + (this.metrics.reduce((a,b)=>a+b,0)/6)*0.6})`; this.ctx.lineWidth = 3;
+        points.forEach((p, i) => { if(i===0) this.ctx.moveTo(p.x, p.y); else this.ctx.lineTo(p.x, p.y); });
+        this.ctx.closePath(); this.ctx.stroke();
+        
+        const grad = this.ctx.createRadialGradient(0,0,0, 0,0,this.radius*1.5);
+        grad.addColorStop(0, 'rgba(34, 211, 238, 0.15)'); grad.addColorStop(1, 'rgba(192, 132, 252, 0.0)');
+        this.ctx.fillStyle = grad; this.ctx.fill();
+
+        points.forEach((p, i) => {
+            const intensity = this.metrics[i];
+            const glow = this.ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 20+intensity*15);
+            glow.addColorStop(0, '#fff'); glow.addColorStop(0.2, intensity>0.5 ? '#c084fc' : '#22d3ee'); glow.addColorStop(1, 'rgba(0,0,0,0)');
+            this.ctx.fillStyle = glow; this.ctx.beginPath(); this.ctx.arc(p.x, p.y, 25, 0, Math.PI*2); this.ctx.fill();
+        });
+        this.ctx.restore();
+        requestAnimationFrame(() => this.animate());
+    }
+}
+
+/* --- STORAGE --- */
+class StorageManager {
+    constructor() { this.key = 'vec_math_pro_v1'; }
+    getAll() { return JSON.parse(localStorage.getItem(this.key) || '[]'); }
+    save(state) {
+        const curr = this.getAll();
+        const item = { id:Date.now(), ts:new Date().toLocaleString(), eq:state.equation, res:state.result, x:state.x, y:state.y, raw:state.rawEq };
+        curr.unshift(item);
+        localStorage.setItem(this.key, JSON.stringify(curr));
+    }
+    del(id) { localStorage.setItem(this.key, JSON.stringify(this.getAll().filter(i=>i.id!==id))); }
+}
+
+/* --- ENGINE --- */
+class VectorCalc {
+    constructor() {
+        this.displayIn = $('#in-display');
+        this.displayOut = $('#out-display');
+        this.status = $('#sys-status');
+        this.raw = "0"; this.result = 0;
+        this.storage = new StorageManager();
+        
+        // Setup Slider Logic
+        this.setupSliders();
+        this.setupUI();
+        this.setupKeyboard();
+    }
+
+    setupSliders() {
+        const sync = (range, num, preview) => {
+            range.addEventListener('input', (e) => {
+                num.value = e.target.value;
+                preview.innerText = e.target.value;
+                this.calculate(true); // Auto-calc on slide
+            });
+            num.addEventListener('input', (e) => {
+                range.value = e.target.value;
+                preview.innerText = e.target.value;
+                // Don't auto calc on type, just sync UI
+            });
+        };
+
+        sync($('#range-x'), $('#var-x'), $('#preview-x'));
+        sync($('#range-y'), $('#var-y'), $('#preview-y'));
+    }
+
+    setupUI() {
+        $('#btn-save-current').onclick = () => {
+            if(this.raw==="0"||this.raw==="Error") return showToast("Nothing to save");
+            const x=$('#var-x').value, y=$('#var-y').value;
+            this.storage.save({ equation:this.displayIn.innerText, rawEq:this.raw, result:this.displayOut.innerText, x, y });
+            $('#save-indicator').classList.add('visible'); setTimeout(()=>$('#save-indicator').classList.remove('visible'), 2000);
+            showToast("Equation saved");
+        };
+        $('#btn-open-library').onclick = () => { this.renderLib(); $('#library-sidebar').classList.add('open'); };
+        $('#btn-close-lib').onclick = () => $('#library-sidebar').classList.remove('open');
+        $('#btn-export').onclick = () => {
+            const l=document.createElement('a'); l.download=`VecCore_${Date.now()}.png`;
+            const t=document.createElement('canvas'); t.width=viz.canvas.width; t.height=viz.canvas.height;
+            const c=t.getContext('2d'); c.fillStyle='#020617'; c.fillRect(0,0,t.width,t.height); c.drawImage(viz.canvas,0,0);
+            l.href=t.toDataURL(); l.click(); showToast("Visual exported");
+        };
+    }
+
+    renderLib() {
+        const l=$('#lib-list'); l.innerHTML=''; const items=this.storage.getAll();
+        if(!items.length) { l.innerHTML='<div class="empty-state">NO DATA</div>'; return; }
+        items.forEach(i=>{
+            const el=document.createElement('div'); el.className='saved-item';
+            el.innerHTML=`<div class="saved-eq">${i.eq} = ${i.res}</div><div class="saved-meta"><span>Y:${i.res}</span><span>X:${i.x} Y:${i.y}</span></div><button class="btn-delete-item">×</button>`;
+            el.onclick=() => { this.load(i); $('#library-sidebar').classList.remove('open'); };
+            el.querySelector('.btn-delete-item').onclick=(e)=>{ e.stopPropagation(); this.storage.del(i.id); this.renderLib(); showToast("Deleted"); };
+            l.appendChild(el);
+        });
+    }
+
+    load(i) {
+        this.raw=i.raw; this.result=i.res; $('#var-x').value=i.x; $('#range-x').value=i.x; $('#preview-x').innerText=i.x;
+        $('#var-y').value=i.y; $('#range-y').value=i.y; $('#preview-y').innerText=i.y;
+        this.updateDisplay(); viz.updateMetrics(this.raw); this.status.innerText="LOADED"; this.status.style.color="#22d3ee"; showToast("Loaded");
+    }
+
+    setupKeyboard() {
+        document.addEventListener('keydown', e => {
+            if($('#library-sidebar').classList.contains('open')) return;
+            const k=e.key;
+            if(/[0-9]/.test(k)||['+','-','*','/','(',')','.','^'].includes(k)) this.add(k);
+            if(k==='Enter') { this.calculate(); document.querySelector('.k-equal').classList.add('pressed'); setTimeout(()=>document.querySelector('.k-equal').classList.remove('pressed'),100); }
+            if(k==='Backspace') { this.raw=this.raw.slice(0,-1)||'0'; this.updateDisplay(); viz.updateMetrics(this.raw); }
+            if(k==='Escape') this.clear();
+            if(k.toLowerCase()==='x') this.add('x'); if(k.toLowerCase()==='y') this.add('y');
+        });
+    }
+
+    add(c) {
+        if(this.raw==="0"||this.raw==="Error") this.raw="";
+        this.raw+=c; this.updateDisplay(); viz.updateMetrics(this.raw); this.status.innerText="INPUT..."; this.status.style.color="#fb923c";
+    }
+
+    clear() {
+        this.raw="0"; this.result=0; this.updateDisplay(); viz.updateMetrics(""); this.status.innerText="READY"; this.status.style.color="#4ade80";
+        $('#val-coh').innerText="0.000"; $('#val-ali').innerText="0.000"; $('#val-com').innerText="0.000";
+    }
+
+    updateDisplay() {
+        this.displayIn.innerText=this.raw.replace(/\*/g,'×').replace(/\//g,'÷').replace(/Math.PI/g,'π').replace(/Math.sqrt/g,'√').replace(/Math.exp/g,'e^');
+        this.displayOut.innerText=this.result;
+    }
+
+    calculate(isSlider = false) {
+        const sig=(t)=>1/(1+Math.exp(-t)), rel=(t)=>Math.max(0,t);
+        const x=parseFloat($('#var-x').value)||0, y=parseFloat($('#var-y').value)||0;
+        let expr=this.raw.replace(/\^/g,'**').replace(/PI/g,'Math.PI').replace(/sqrt\(/g,'Math.sqrt(').replace(/exp\(/g,'Math.exp(');
+        try {
+            const r=new Function('sigmoid','relu','x','y','return '+expr)(sig,rel,x,y);
+            if(!isFinite(r)||isNaN(r)) throw "Err";
+            this.result=Number(r).toFixed(6);
+            this.updateDisplay();
+            if(!isSlider) { this.status.innerText="SOLVED"; this.status.style.color="#22d3ee"; }
+            else { this.status.innerText="MORPHING..."; this.status.style.color="#c084fc"; }
+            
+            const vp=Math.abs(this.result*0.05);
+            const coh=Math.max(0.113, Math.min(0.292, 0.15*Math.exp(-vp*PHI)));
+            const ds=viz.metrics.reduce((a,b)=>a+b,0);
+            const bal=(6-Math.abs(6-ds*6))/6;
+            const ali=Math.max(3.660, Math.min(4.226, 3.8+bal*1.2));
+            
+            $('#val-coh').innerText=coh.toFixed(4);
+            $('#val-ali').innerText=ali.toFixed(4);
+            $('#val-com').innerText=(ds/6).toFixed(3);
+        } catch(e) {
+            if(!isSlider) { this.raw="Error"; this.updateDisplay(); this.status.innerText="ERROR"; this.status.style.color="#f87171"; showToast("Syntax Error"); }
+        }
+    }
+}
+
+document.querySelectorAll('.key').forEach(b=>b.addEventListener('click',e=>{
+    const v=b.getAttribute('data-key'); b.classList.add('pressed'); setTimeout(()=>b.classList.remove('pressed'),100);
+    if(v==='AC') engine.clear(); else if(v==='=') engine.calculate(); else engine.add(v);
+}));
+
+const viz=new SpaceTimeVisualizer(), engine=new VectorCalc();
+</script>
+</body>
+</html>
