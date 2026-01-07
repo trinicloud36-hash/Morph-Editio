@@ -1,1 +1,0 @@
-globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"/workspaces/Morph-Editio/src/":[],"/workspaces/Morph-Editio/src/app/api/route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}}
